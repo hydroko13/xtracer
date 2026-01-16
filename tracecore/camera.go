@@ -67,14 +67,14 @@ func CalculatePixMap(origin Vec3, facing Vec3, pixWidth int, pixHeight int) map[
 }
 
 func (cam *TracedCamera) RecalculatePixMap() {
-	cam.pixMap = CalculatePixMap(cam.Pos, cam.Facing, 80, 80)
+	cam.pixMap = CalculatePixMap(cam.Pos, cam.Facing, 180, 180)
 }
 
 func NewTracedCamera(pos Vec3, facing Vec3) TracedCamera {
 
 	facingNormed := facing.Normalize()
 
-	pixMap := CalculatePixMap(pos, facingNormed, 80, 80)
+	pixMap := CalculatePixMap(pos, facingNormed, 180, 180)
 
 
 	return TracedCamera{pos, facingNormed, pixMap}

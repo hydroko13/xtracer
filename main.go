@@ -5,10 +5,10 @@ import (
 	"image"
 	"image/color"
 	"math"
-	"os"
-	"runtime/pprof"
-	"os/exec"
 
+	"os"
+	"os/exec"
+	"runtime/pprof"
 
 	"github.com/hydroko13/xtracer/tracecore"
 )
@@ -35,7 +35,7 @@ func (app XtracerDemo) Update(dt float32) {
 
 	app.cam.RecalculatePixMap()
 
-	*app.a += (dt * 195)
+	*app.a += (dt * 175)
 }
 
 func (app XtracerDemo) RenderFrame(frame_index int) {
@@ -44,14 +44,14 @@ func (app XtracerDemo) RenderFrame(frame_index int) {
 
 	var progress int = 0
 	
-	for x := 0; x < 80; x++ {
-		for y := 0; y < 80; y++ {
+	for x := 0; x < 180; x++ {
+		for y := 0; y < 180; y++ {
 			
-			allColors := []color.RGBA{}
-			for t := 0; t < 800; t++ {
+			allColors := make([]color.RGBA, 0, 1)
+			for t := 0; t < 25; t++ {
 				pixelColor, contrib := app.scene.RenderPixel(app.cam, x, y)
 
-				weightedColor := color.RGBA{uint8(float64(pixelColor.R) * contrib), uint8(float64(pixelColor.G) * contrib), uint8(float64(pixelColor.B) * contrib), 255}
+				weightedColor := color.RGBA{uint8(float32(pixelColor.R) * contrib), uint8(float32(pixelColor.G) * contrib), uint8(float32(pixelColor.B) * contrib), 255}
 
 				
 				allColors = append(allColors, weightedColor)
@@ -81,7 +81,7 @@ func (app XtracerDemo) RenderFrame(frame_index int) {
 
 		
 			
-			per := float32(progress) / (80 * 80) * 100
+			per := float32(progress) / (180 * 180) * 100
 			fmt.Printf("%v%% done frame %v\n", per, frame_index)
 
 		}
@@ -115,75 +115,78 @@ func main() {
 
 
 	
-	var frame *image.RGBA = image.NewRGBA(image.Rect(0, 0, 80, 80))
+	var frame *image.RGBA = image.NewRGBA(image.Rect(0, 0, 180, 180))
 	
 	scene := tracecore.NewTracedScene()
 	cam := tracecore.NewTracedCamera(
 		tracecore.Vec3{X: 0.0, Y: 0.0, Z: 0.0},
 		tracecore.Vec3{X: 1.0, Y: 0.0, Z: 0.0},
 	)
-	var angle float32 = 180
+	var angle float32 = -45
 
 	demo := XtracerDemo{scene: &scene, cam: &cam, a: &angle, frame: frame}
 	
+
+
 	demo.scene.AddCuboid(tracecore.Cuboid{
 		Corner1: tracecore.Vec3{X: 2.0, Y: -7, Z: -7},
 		Corner2: tracecore.Vec3{X: 16.0, Y: 7, Z: 7},
 		IsLight: false,
-		MaterialColor: color.RGBA{255, 255, 255, 255},
+		MaterialColor: color.RGBA{255, 50, 50, 255},
 	})
 
 	demo.scene.AddCuboid(tracecore.Cuboid{
-		Corner1: tracecore.Vec3{X: 20.0, Y: -6, Z: -4},
-		Corner2: tracecore.Vec3{X: 24.0, Y: 6, Z: 4},
+		Corner1: tracecore.Vec3{X: 19.0, Y: -2, Z: -2},
+		Corner2: tracecore.Vec3{X: 20.0, Y: 2, Z: 2},
 		IsLight: true,
-		MaterialColor: color.RGBA{255, 255, 0, 255},
+		MaterialColor: color.RGBA{230, 230, 0, 255},
 	})
 
-	demo.scene.AddCuboid(tracecore.Cuboid{
-		Corner1: tracecore.Vec3{X: -600.0, Y: -11, Z: -600},
-		Corner2: tracecore.Vec3{X: 600.0, Y: -10, Z: 600},
-		IsLight: false,
-		MaterialColor: color.RGBA{20, 0, 0, 255},
-	})
 
-	
-	demo.scene.AddCuboid(tracecore.Cuboid{
-		Corner1: tracecore.Vec3{X: -600.0, Y: 11, Z: -600},
-		Corner2: tracecore.Vec3{X: 600.0, Y: 12, Z: 600},
-		IsLight: false,
-		MaterialColor: color.RGBA{20, 0, 0, 255},
-	})
-
-	demo.scene.AddCuboid(tracecore.Cuboid{
-		Corner1: tracecore.Vec3{X: -25.0, Y: -600, Z: -600},
-		Corner2: tracecore.Vec3{X: -24.0, Y: 600, Z: 600},
-		IsLight: false,
-		MaterialColor: color.RGBA{20, 0, 0, 255},
-	})
+	// demo.scene.AddCuboid(tracecore.Cuboid{
+	// 	Corner1: tracecore.Vec3{X: -600.0, Y: -11, Z: -600},
+	// 	Corner2: tracecore.Vec3{X: 600.0, Y: -10, Z: 600},
+	// 	IsLight: false,
+	// 	MaterialColor: color.RGBA{20, 0, 0, 255},
+	// })
 
 	
-	demo.scene.AddCuboid(tracecore.Cuboid{
-		Corner1: tracecore.Vec3{X: 24.0, Y: -600, Z: -600},
-		Corner2: tracecore.Vec3{X: 25.0, Y: 600, Z: 600},
-		IsLight: false,
-		MaterialColor: color.RGBA{20, 0, 0, 255},
-	})
-	
-	demo.scene.AddCuboid(tracecore.Cuboid{
-		Corner1: tracecore.Vec3{X: -600.0, Y: -600, Z: -25},
-		Corner2: tracecore.Vec3{X: 600.0, Y: 600, Z: -24},
-		IsLight: false,
-		MaterialColor: color.RGBA{20, 0, 0, 255},
-	})
+	// demo.scene.AddCuboid(tracecore.Cuboid{
+	// 	Corner1: tracecore.Vec3{X: -600.0, Y: 11, Z: -600},
+	// 	Corner2: tracecore.Vec3{X: 600.0, Y: 12, Z: 600},
+	// 	IsLight: false,
+	// 	MaterialColor: color.RGBA{20, 0, 0, 255},
+	// })
+
+	// demo.scene.AddCuboid(tracecore.Cuboid{
+	// 	Corner1: tracecore.Vec3{X: -25.0, Y: -600, Z: -600},
+	// 	Corner2: tracecore.Vec3{X: -24.0, Y: 600, Z: 600},
+	// 	IsLight: false,
+	// 	MaterialColor: color.RGBA{20, 0, 0, 255},
+	// })
 
 	
-	demo.scene.AddCuboid(tracecore.Cuboid{
-		Corner1: tracecore.Vec3{X: -60.0, Y: -60, Z: 24},
-		Corner2: tracecore.Vec3{X: 60.0, Y: 60, Z: 25},
-		IsLight: false,
-		MaterialColor: color.RGBA{20, 0, 0, 255},
-	})
+	// demo.scene.AddCuboid(tracecore.Cuboid{
+	// 	Corner1: tracecore.Vec3{X: 24.0, Y: -600, Z: -600},
+	// 	Corner2: tracecore.Vec3{X: 25.0, Y: 600, Z: 600},
+	// 	IsLight: false,
+	// 	MaterialColor: color.RGBA{20, 0, 0, 255},
+	// })
+	
+	// demo.scene.AddCuboid(tracecore.Cuboid{
+	// 	Corner1: tracecore.Vec3{X: -600.0, Y: -600, Z: -25},
+	// 	Corner2: tracecore.Vec3{X: 600.0, Y: 600, Z: -24},
+	// 	IsLight: false,
+	// 	MaterialColor: color.RGBA{20, 0, 0, 255},
+	// })
+
+	
+	// demo.scene.AddCuboid(tracecore.Cuboid{
+	// 	Corner1: tracecore.Vec3{X: -60.0, Y: -60, Z: 24},
+	// 	Corner2: tracecore.Vec3{X: 60.0, Y: 60, Z: 25},
+	// 	IsLight: false,
+	// 	MaterialColor: color.RGBA{20, 0, 0, 255},
+	// })
 
 
 
@@ -194,12 +197,12 @@ func main() {
 		"-y",
 		"-f", "rawvideo",
 		"-pix_fmt", "rgb24",
-		"-s", "80x80",
+		"-s", "180x180",
 		"-r", "18",
 		"-i", "-",
 		"-c:v", "libx264",
 		"-pix_fmt", "yuv420p",
-		"-vf", "scale=400:400",
+		"-vf", "scale=360:360",
 		"out.mp4",
 	)
 
@@ -216,7 +219,7 @@ func main() {
 
 	
 
-	for frame_step := 0; frame_step < 50; frame_step++ {
+	for frame_step := 0; frame_step < 18; frame_step++ {
 		
 		demo.Update(1.0/18.0)
 		demo.RenderFrame(frame_step)

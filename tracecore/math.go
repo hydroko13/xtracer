@@ -52,10 +52,10 @@ func (v Vec3) EqualTo(other Vec3) bool {
 	return false
 }
 
-func (v *Vec3) ApplyNoise() {
-	v.X += (rand.Float32() - 0.5) * 0.2
-	v.Y += (rand.Float32() - 0.5) * 0.2
-	v.Z += (rand.Float32() - 0.5) * 0.2
+func (v *Vec3) ApplyNoise(strength float32) {
+	v.X += (rand.Float32() - 0.5) * 2 * strength
+	v.Y += (rand.Float32() - 0.5) * 2 * strength
+	v.Z += (rand.Float32() - 0.5) * 2 * strength
 }
 
 
