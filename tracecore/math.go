@@ -1,6 +1,7 @@
 package tracecore
 
 import "math"
+import "math/rand/v2"
 
 type Vec3 struct {
 	X float32
@@ -40,6 +41,25 @@ func (v Vec3) ScaleBy(factor float32) Vec3 {
 	return v
 }
 
+func (v Vec3) EqualTo(other Vec3) bool {
+	if v.X == other.X {
+		if v.Y == other.Y {
+			if v.Z == other.Z {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (v *Vec3) ApplyNoise() {
+	v.X += (rand.Float32() - 0.5) * 0.2
+	v.Y += (rand.Float32() - 0.5) * 0.2
+	v.Z += (rand.Float32() - 0.5) * 0.2
+}
+
+
+
 
 func (v Vec3) Cross(other Vec3) Vec3 {
 	newVec := Vec3{
@@ -49,6 +69,16 @@ func (v Vec3) Cross(other Vec3) Vec3 {
 	}
 
 	return newVec
+}
+
+
+func (v Vec3) Dot(other Vec3) float32 {
+	result := 
+		v.X*other.X +
+		v.Y*other.Y +
+		v.Z*other.Z
+
+	return result
 }
 
 

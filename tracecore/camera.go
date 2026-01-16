@@ -36,7 +36,7 @@ func CalculatePixMap(origin Vec3, facing Vec3, pixWidth int, pixHeight int) map[
 	// var halfWidth float32 = float32(pixWidth) / 2.0
 	// var halfHeight float32 = float32(pixHeight) / 2.0
 
-	var newPixMap map[ScreenPoint]DoubleVec3 = make(map[ScreenPoint]DoubleVec3)
+	var newPixMap map[ScreenPoint]DoubleVec3 = make(map[ScreenPoint]DoubleVec3, pixHeight * pixWidth)
 
 	var planeTopleft Vec3 = planeCenter.Add(camRight.ScaleBy(1.0 * -0.5)).Add(camUp.ScaleBy(1.0 * 0.5))
 	
@@ -67,14 +67,14 @@ func CalculatePixMap(origin Vec3, facing Vec3, pixWidth int, pixHeight int) map[
 }
 
 func (cam *TracedCamera) RecalculatePixMap() {
-	cam.pixMap = CalculatePixMap(cam.Pos, cam.Facing, 100, 100)
+	cam.pixMap = CalculatePixMap(cam.Pos, cam.Facing, 80, 80)
 }
 
 func NewTracedCamera(pos Vec3, facing Vec3) TracedCamera {
 
 	facingNormed := facing.Normalize()
 
-	pixMap := CalculatePixMap(pos, facingNormed, 100, 100)
+	pixMap := CalculatePixMap(pos, facingNormed, 80, 80)
 
 
 	return TracedCamera{pos, facingNormed, pixMap}

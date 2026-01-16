@@ -5,11 +5,15 @@ import (
 	"image"
 	"image/color"
 	"math"
-	"os/exec"
 	"os"
+	"runtime/pprof"
+	"os/exec"
+
 
 	"github.com/hydroko13/xtracer/tracecore"
 )
+
+
 
 type XtracerDemo struct {
 	scene *tracecore.TracedScene
@@ -31,43 +35,58 @@ func (app XtracerDemo) Update(dt float32) {
 
 	app.cam.RecalculatePixMap()
 
-	*app.a += (dt * 180)
+	*app.a += (dt * 195)
 }
 
-func (app XtracerDemo) RenderFrame() {
+func (app XtracerDemo) RenderFrame(frame_index int) {
 	
 
+
+	var progress int = 0
 	
+	for x := 0; x < 80; x++ {
+		for y := 0; y < 80; y++ {
+			
+			allColors := []color.RGBA{}
+			for t := 0; t < 800; t++ {
+				pixelColor, contrib := app.scene.RenderPixel(app.cam, x, y)
 
-	for x := 0; x < 100; x++ {
-		for y := 0; y < 100; y++ {
-			app.frame.SetRGBA(x, y, color.RGBA{0, 0, 0, 255})
-			dist, face := app.scene.CastRay(app.cam, x, y)
+				weightedColor := color.RGBA{uint8(float64(pixelColor.R) * contrib), uint8(float64(pixelColor.G) * contrib), uint8(float64(pixelColor.B) * contrib), 255}
 
-			if dist > -1 {
-				pixelColor := color.RGBA{255, 255, 255, 255}
-				switch face {
-					case 0:
-						pixelColor = color.RGBA{255, 0, 0, 255}
-					case 1:
-						pixelColor = color.RGBA{255, 255, 0, 255}
-					case 2:
-						pixelColor = color.RGBA{0, 255, 0, 255}
-					case 3:
-						pixelColor = color.RGBA{0, 255, 255, 255}
-					case 4:
-						pixelColor = color.RGBA{0, 0, 255, 255}
-					case 5:
-						pixelColor = color.RGBA{255, 0, 255, 255}
-					case -1:
-						break
+				
+				allColors = append(allColors, weightedColor)
 
-				}
-				app.frame.SetRGBA(x, y, pixelColor)
+				
 			}
+			var avg_r int = 0
+			var avg_g int = 0
+			var avg_b int = 0
+
+
+			for _, c := range allColors {
+				avg_r += int(c.R)
+				avg_g += int(c.G)
+				avg_b += int(c.B)
+				
+			}
+
+			avg_r /= len(allColors)
+			avg_g /= len(allColors)
+			avg_b /= len(allColors)
+
+			
+			app.frame.SetRGBA(x, y, color.RGBA{uint8(avg_r), uint8(avg_g), uint8(avg_b), 255})
+			
+			progress++
+
+		
+			
+			per := float32(progress) / (80 * 80) * 100
+			fmt.Printf("%v%% done frame %v\n", per, frame_index)
 
 		}
 	}
+
 
 	
 
@@ -80,24 +99,94 @@ func (app XtracerDemo) RenderFrame() {
 
 
 func main() {
+
 	fmt.Println("Xtracer demo init...")
 
+    f, err := os.Create("cpu_night.prof")
+    if err != nil {
+        panic(err)
+    }
+    defer f.Close()
+
+    if err := pprof.StartCPUProfile(f); err != nil {
+        panic(err)
+    }
+    defer pprof.StopCPUProfile()
+
+
 	
-	var frame *image.RGBA = image.NewRGBA(image.Rect(0, 0, 100, 100))
+	var frame *image.RGBA = image.NewRGBA(image.Rect(0, 0, 80, 80))
 	
 	scene := tracecore.NewTracedScene()
 	cam := tracecore.NewTracedCamera(
 		tracecore.Vec3{X: 0.0, Y: 0.0, Z: 0.0},
 		tracecore.Vec3{X: 1.0, Y: 0.0, Z: 0.0},
 	)
-	var angle float32 = 0
+	var angle float32 = 180
 
 	demo := XtracerDemo{scene: &scene, cam: &cam, a: &angle, frame: frame}
 	
 	demo.scene.AddCuboid(tracecore.Cuboid{
 		Corner1: tracecore.Vec3{X: 2.0, Y: -7, Z: -7},
 		Corner2: tracecore.Vec3{X: 16.0, Y: 7, Z: 7},
+		IsLight: false,
+		MaterialColor: color.RGBA{255, 255, 255, 255},
 	})
+
+	demo.scene.AddCuboid(tracecore.Cuboid{
+		Corner1: tracecore.Vec3{X: 20.0, Y: -6, Z: -4},
+		Corner2: tracecore.Vec3{X: 24.0, Y: 6, Z: 4},
+		IsLight: true,
+		MaterialColor: color.RGBA{255, 255, 0, 255},
+	})
+
+	demo.scene.AddCuboid(tracecore.Cuboid{
+		Corner1: tracecore.Vec3{X: -600.0, Y: -11, Z: -600},
+		Corner2: tracecore.Vec3{X: 600.0, Y: -10, Z: 600},
+		IsLight: false,
+		MaterialColor: color.RGBA{20, 0, 0, 255},
+	})
+
+	
+	demo.scene.AddCuboid(tracecore.Cuboid{
+		Corner1: tracecore.Vec3{X: -600.0, Y: 11, Z: -600},
+		Corner2: tracecore.Vec3{X: 600.0, Y: 12, Z: 600},
+		IsLight: false,
+		MaterialColor: color.RGBA{20, 0, 0, 255},
+	})
+
+	demo.scene.AddCuboid(tracecore.Cuboid{
+		Corner1: tracecore.Vec3{X: -25.0, Y: -600, Z: -600},
+		Corner2: tracecore.Vec3{X: -24.0, Y: 600, Z: 600},
+		IsLight: false,
+		MaterialColor: color.RGBA{20, 0, 0, 255},
+	})
+
+	
+	demo.scene.AddCuboid(tracecore.Cuboid{
+		Corner1: tracecore.Vec3{X: 24.0, Y: -600, Z: -600},
+		Corner2: tracecore.Vec3{X: 25.0, Y: 600, Z: 600},
+		IsLight: false,
+		MaterialColor: color.RGBA{20, 0, 0, 255},
+	})
+	
+	demo.scene.AddCuboid(tracecore.Cuboid{
+		Corner1: tracecore.Vec3{X: -600.0, Y: -600, Z: -25},
+		Corner2: tracecore.Vec3{X: 600.0, Y: 600, Z: -24},
+		IsLight: false,
+		MaterialColor: color.RGBA{20, 0, 0, 255},
+	})
+
+	
+	demo.scene.AddCuboid(tracecore.Cuboid{
+		Corner1: tracecore.Vec3{X: -60.0, Y: -60, Z: 24},
+		Corner2: tracecore.Vec3{X: 60.0, Y: 60, Z: 25},
+		IsLight: false,
+		MaterialColor: color.RGBA{20, 0, 0, 255},
+	})
+
+
+
 
 
 	cmd := exec.Command(
@@ -105,8 +194,8 @@ func main() {
 		"-y",
 		"-f", "rawvideo",
 		"-pix_fmt", "rgb24",
-		"-s", "100x100",
-		"-r", "25",
+		"-s", "80x80",
+		"-r", "18",
 		"-i", "-",
 		"-c:v", "libx264",
 		"-pix_fmt", "yuv420p",
@@ -119,7 +208,6 @@ func main() {
 		panic(err)
 	}
 
-	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
 	if err := cmd.Start(); err != nil {
@@ -129,8 +217,9 @@ func main() {
 	
 
 	for frame_step := 0; frame_step < 50; frame_step++ {
-		demo.Update(1.0/25.0)
-		demo.RenderFrame()
+		
+		demo.Update(1.0/18.0)
+		demo.RenderFrame(frame_step)
 
 
 		rgba_bytes := frame.Pix
@@ -151,13 +240,22 @@ func main() {
 		if err != nil {
 			break
 		}
+	
 
-		fmt.Println(frame_step)
+
+
 
 	}
 	
 	stdin.Close()
 	cmd.Wait()
+
+	
+
+	// f2, _ := os.Create("mem2.prof")
+	// pprof.WriteHeapProfile(f2)
+	// f2.Close()
+
 	
 
 }
