@@ -48,7 +48,7 @@ func (app XtracerDemo) RenderFrame(frame_index int) {
 		for y := 0; y < 180; y++ {
 			
 			allColors := make([]color.RGBA, 0, 1)
-			for t := 0; t < 20; t++ {
+			for t := 0; t < 600; t++ {
 				pixelColor, contrib := app.scene.RenderPixel(app.cam, x, y)
 
 				weightedColor := color.RGBA{uint8(float32(pixelColor.R) * contrib), uint8(float32(pixelColor.G) * contrib), uint8(float32(pixelColor.B) * contrib), 255}
