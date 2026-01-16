@@ -48,7 +48,7 @@ func (app XtracerDemo) RenderFrame(frame_index int) {
 		for y := 0; y < 180; y++ {
 			
 			allColors := make([]color.RGBA, 0, 1)
-			for t := 0; t < 25; t++ {
+			for t := 0; t < 20; t++ {
 				pixelColor, contrib := app.scene.RenderPixel(app.cam, x, y)
 
 				weightedColor := color.RGBA{uint8(float32(pixelColor.R) * contrib), uint8(float32(pixelColor.G) * contrib), uint8(float32(pixelColor.B) * contrib), 255}
@@ -143,51 +143,12 @@ func main() {
 	})
 
 
-	// demo.scene.AddCuboid(tracecore.Cuboid{
-	// 	Corner1: tracecore.Vec3{X: -600.0, Y: -11, Z: -600},
-	// 	Corner2: tracecore.Vec3{X: 600.0, Y: -10, Z: 600},
-	// 	IsLight: false,
-	// 	MaterialColor: color.RGBA{20, 0, 0, 255},
-	// })
-
-	
-	// demo.scene.AddCuboid(tracecore.Cuboid{
-	// 	Corner1: tracecore.Vec3{X: -600.0, Y: 11, Z: -600},
-	// 	Corner2: tracecore.Vec3{X: 600.0, Y: 12, Z: 600},
-	// 	IsLight: false,
-	// 	MaterialColor: color.RGBA{20, 0, 0, 255},
-	// })
-
-	// demo.scene.AddCuboid(tracecore.Cuboid{
-	// 	Corner1: tracecore.Vec3{X: -25.0, Y: -600, Z: -600},
-	// 	Corner2: tracecore.Vec3{X: -24.0, Y: 600, Z: 600},
-	// 	IsLight: false,
-	// 	MaterialColor: color.RGBA{20, 0, 0, 255},
-	// })
-
-	
-	// demo.scene.AddCuboid(tracecore.Cuboid{
-	// 	Corner1: tracecore.Vec3{X: 24.0, Y: -600, Z: -600},
-	// 	Corner2: tracecore.Vec3{X: 25.0, Y: 600, Z: 600},
-	// 	IsLight: false,
-	// 	MaterialColor: color.RGBA{20, 0, 0, 255},
-	// })
-	
-	// demo.scene.AddCuboid(tracecore.Cuboid{
-	// 	Corner1: tracecore.Vec3{X: -600.0, Y: -600, Z: -25},
-	// 	Corner2: tracecore.Vec3{X: 600.0, Y: 600, Z: -24},
-	// 	IsLight: false,
-	// 	MaterialColor: color.RGBA{20, 0, 0, 255},
-	// })
-
-	
-	// demo.scene.AddCuboid(tracecore.Cuboid{
-	// 	Corner1: tracecore.Vec3{X: -60.0, Y: -60, Z: 24},
-	// 	Corner2: tracecore.Vec3{X: 60.0, Y: 60, Z: 25},
-	// 	IsLight: false,
-	// 	MaterialColor: color.RGBA{20, 0, 0, 255},
-	// })
-
+	demo.scene.AddCuboid(tracecore.Cuboid{
+		Corner1: tracecore.Vec3{X: -600.0, Y: -11, Z: -600},
+		Corner2: tracecore.Vec3{X: 600.0, Y: -10, Z: 600},
+		IsLight: false,
+		MaterialColor: color.RGBA{20, 20, 20, 255},
+	})
 
 
 
