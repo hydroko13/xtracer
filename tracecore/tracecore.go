@@ -4,7 +4,7 @@ import (
 	// "fmt"
 	_ "fmt"
 	"image/color"
-	"math/rand/v2"
+
 
 )
 
@@ -74,7 +74,7 @@ func (scene *TracedScene) CastRay(cam *TracedCamera, screenX int, screenY int) (
 	return nil, -1
 }
 
-func (scene *TracedScene) RenderPixel(cam *TracedCamera, screenX int, screenY int) (color.RGBA, float32) {
+func (scene *TracedScene) RenderPixel(cam *TracedCamera, screenX int, screenY int) color.RGBA {
 	
 	var screenPoint ScreenPoint = ScreenPoint{X: screenX, Y: screenY}
 
@@ -84,10 +84,6 @@ func (scene *TracedScene) RenderPixel(cam *TracedCamera, screenX int, screenY in
 	var rayPos Vec3 = cam.Pos.Add(pixVec)
 	var rayDir Vec3 = rayVec.ScaleBy(1) //copy the vec3
 
-	var contrib float32 = 1
-
-	var p float32 = 0.8
-
 	
 	cuboids_checking := []Cuboid{}
 	//cuboids_removed := []Cuboid{}
@@ -96,102 +92,34 @@ func (scene *TracedScene) RenderPixel(cam *TracedCamera, screenX int, screenY in
 		cuboids_checking = append(cuboids_checking, cuboid)
 	}
 
-	var timesReflected int = 0
 
-	for {
-		cuboid_hit, face, endPos := scene.CastRayFrom(rayPos, rayDir, cuboids_checking)
+	cuboid_hit, face, _ := scene.CastRayFrom(rayPos, rayDir, cuboids_checking)
 
+	// top, bottom, left, right, front, back
 
-			
-
-		if cuboid_hit != nil {
-
-			
-
-			
-
-			if cuboid_hit.IsLight {
-
-
-				lightColor := cuboid_hit.MaterialColor
-
-				if timesReflected == 0 {
-
-					return lightColor, contrib
-				} else {
-
-					pixColor := color.RGBA{lightColor.R / uint8(timesReflected + 1), lightColor.G / uint8(timesReflected + 1), lightColor.B / uint8(timesReflected + 1), 255}
-
-					return pixColor, contrib
-				}
-
-
-
-
-			} else {
-
-				faceNormal := cuboid_hit.GetFaceNormal(face)
-
-				// dotProduct := rayDir.Dot(faceNormal)
-				// reflectedRay := rayDir.Add(faceNormal.ScaleBy(dotProduct * -2))		
-
-				rayDir = faceNormal
-
-				rayDir.ApplyNoise(1)
-
-				rayDir = rayDir.Normalize()
-				
-				rayPos = endPos
-
-				step := 0
-				for {
-					intersects, _ := cuboid_hit.PointIntersects(rayPos)
-					if !intersects {
-						break
-					} else {
-						rayPos = endPos.Add(rayDir.ScaleBy(float32(step) * 0.25))
-					}
-					step++
-				}
-
-			
-				
-				//rayDir = reflectedRay
-				
-
-				timesReflected++
-
-				if timesReflected > 50 {
-					pixColor := color.RGBA{0, 0, 0, 255}
-
-					return pixColor, contrib
-				} else if timesReflected > 3 {
-					r := rand.Float32()
-					if r < p {
-						contrib /= p
-					} else {
-						return color.RGBA{0, 0, 0, 255}, 0
-					}
-				}
-
-
-
-
-
-
-
-				
-				
-			}
-		} else {
-
-			pixColor := color.RGBA{0, 0, 0, 255}
-
-			return pixColor, contrib
-			
-		
+	if cuboid_hit != nil {
+		switch face {
+			case 0:
+				return color.RGBA{255, 0, 0, 255}
+			case 1:
+				return color.RGBA{255, 255, 0, 255}
+			case 2:
+				return color.RGBA{0, 255, 0, 255}
+			case 3:
+				return color.RGBA{0, 255, 255, 255}
+			case 4:
+				return color.RGBA{0, 0, 255, 255}
+			case 5:
+				return color.RGBA{255, 0, 255, 255}
 		}
+		
+	} else {
+		return color.RGBA{0, 0, 0, 255}
 	}
+
 	
+	return color.RGBA{0, 0, 0, 255}
+
+
 }
 

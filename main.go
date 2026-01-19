@@ -44,38 +44,12 @@ func (app XtracerDemo) RenderFrame(frame_index int) {
 
 	var progress int = 0
 	
-	for x := 0; x < 180; x++ {
-		for y := 0; y < 180; y++ {
-			
-			allColors := make([]color.RGBA, 0, 1)
-			for t := 0; t < 600; t++ {
-				pixelColor, contrib := app.scene.RenderPixel(app.cam, x, y)
+	for x := 0; x < 64; x++ {
+		for y := 0; y < 64; y++ {
 
-				weightedColor := color.RGBA{uint8(float32(pixelColor.R) * contrib), uint8(float32(pixelColor.G) * contrib), uint8(float32(pixelColor.B) * contrib), 255}
+			pixelColor := app.scene.RenderPixel(app.cam, x, y)
 
-				
-				allColors = append(allColors, weightedColor)
-
-				
-			}
-			var avg_r int = 0
-			var avg_g int = 0
-			var avg_b int = 0
-
-
-			for _, c := range allColors {
-				avg_r += int(c.R)
-				avg_g += int(c.G)
-				avg_b += int(c.B)
-				
-			}
-
-			avg_r /= len(allColors)
-			avg_g /= len(allColors)
-			avg_b /= len(allColors)
-
-			
-			app.frame.SetRGBA(x, y, color.RGBA{uint8(avg_r), uint8(avg_g), uint8(avg_b), 255})
+			app.frame.SetRGBA(x, y, pixelColor)
 			
 			progress++
 
@@ -115,7 +89,7 @@ func main() {
 
 
 	
-	var frame *image.RGBA = image.NewRGBA(image.Rect(0, 0, 180, 180))
+	var frame *image.RGBA = image.NewRGBA(image.Rect(0, 0, 64, 64))
 	
 	scene := tracecore.NewTracedScene()
 	cam := tracecore.NewTracedCamera(
@@ -135,20 +109,8 @@ func main() {
 		MaterialColor: color.RGBA{255, 50, 50, 255},
 	})
 
-	demo.scene.AddCuboid(tracecore.Cuboid{
-		Corner1: tracecore.Vec3{X: 19.0, Y: -2, Z: -2},
-		Corner2: tracecore.Vec3{X: 20.0, Y: 2, Z: 2},
-		IsLight: true,
-		MaterialColor: color.RGBA{230, 230, 0, 255},
-	})
+	
 
-
-	demo.scene.AddCuboid(tracecore.Cuboid{
-		Corner1: tracecore.Vec3{X: -600.0, Y: -11, Z: -600},
-		Corner2: tracecore.Vec3{X: 600.0, Y: -10, Z: 600},
-		IsLight: false,
-		MaterialColor: color.RGBA{20, 20, 20, 255},
-	})
 
 
 
@@ -158,12 +120,12 @@ func main() {
 		"-y",
 		"-f", "rawvideo",
 		"-pix_fmt", "rgb24",
-		"-s", "180x180",
+		"-s", "64x64",
 		"-r", "18",
 		"-i", "-",
 		"-c:v", "libx264",
 		"-pix_fmt", "yuv420p",
-		"-vf", "scale=360:360",
+		"-vf", "scale=512:512",
 		"out.mp4",
 	)
 
