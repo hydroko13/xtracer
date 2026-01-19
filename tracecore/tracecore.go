@@ -41,7 +41,20 @@ func (scene *TracedScene) CastRayFrom(startPos Vec3, rayDir Vec3, cuboids_checki
 		for _, cuboid := range cuboids_checking {
 			intersects, face := cuboid.PointIntersects(rayPos) 
 			if intersects {
-				return &cuboid, face, rayPos
+
+				step2 := 0
+				for {
+					hitPos := rayPos.Add(rayDir.ScaleBy(float32(step2) * -0.006))
+					step2 += 1
+
+					intersects2, _ := cuboid.PointIntersects(hitPos) 
+					if !intersects2 {
+						return &cuboid, face, hitPos
+					}
+				}	
+				
+
+				
 			}
 		}
 		
