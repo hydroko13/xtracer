@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"image"
+	"sync"
 	"image/color"
 	"math"
 
@@ -14,6 +15,8 @@ import (
 )
 
 
+const frameWidth int = 960
+const frameHeight int = 960
 
 type XtracerDemo struct {
 	scene *tracecore.TracedScene
@@ -27,7 +30,8 @@ func (app XtracerDemo) Update(dt float32) {
 
 	rada := float64(*app.a) * (3.14159 / float64(180.0))
 
-	outVector := tracecore.Vec3{X: float32(math.Cos(rada)) * 25.5, Y: 0.0, Z: float32(math.Sin(rada)) * 25.5}
+	outVector := tracecore.Vec3{X: float32(math.Cos(rada)) * 25.5, Y: float32(math.Sin(rada)) * 25.5, Z: float32(math.Sin(rada)) * 25.5}
+	
 
 	app.cam.Pos = cuboidPos.Add(outVector)
 	app.cam.Facing = app.cam.Pos.Diff(cuboidPos).Normalize()	
@@ -35,37 +39,48 @@ func (app XtracerDemo) Update(dt float32) {
 
 	app.cam.RecalculatePixMap()
 
-	*app.a += (dt * 175)
+	*app.a += (dt * 190)
+}
+
+func (app XtracerDemo) RenderPortionWorker(sw int, sh int, left int, top int, width int, height int, wg *sync.WaitGroup) {
+	
+	defer wg.Done()
+
+	var progress int = 0
+	
+
+
+	for x := left; x < left + width; x++ {
+		for y := top; y < top + height; y++ {
+
+			pixelColor := app.scene.RenderPixel(app.cam, x, y)
+			i := y * app.frame.Stride + x * 4
+			app.frame.Pix[i] = pixelColor.R
+			app.frame.Pix[i+1] = pixelColor.G
+			app.frame.Pix[i+2] = pixelColor.B
+			app.frame.Pix[i+3] = 255
+			progress++
+
+		
+
+		}
+	}
 }
 
 func (app XtracerDemo) RenderFrame(frame_index int) {
 	
+	var wg sync.WaitGroup
 
 
-	var progress int = 0
-	
-	for x := 0; x < 64; x++ {
-		for y := 0; y < 64; y++ {
 
-			pixelColor := app.scene.RenderPixel(app.cam, x, y)
+	for w := 0; w < frameWidth; w++ {
+		wg.Add(1)
 
-			app.frame.SetRGBA(x, y, pixelColor)
-			
-			progress++
-
-		
-			
-			per := float32(progress) / (180 * 180) * 100
-			fmt.Printf("%v%% done frame %v\n", per, frame_index)
-
-		}
+		go app.RenderPortionWorker(frameWidth, frameHeight, w, 0, 1, frameHeight, &wg)
 	}
-
-
 	
 
-	
-	
+	wg.Wait()
 
 
 }
@@ -74,9 +89,12 @@ func (app XtracerDemo) RenderFrame(frame_index int) {
 
 func main() {
 
+
+	
+
 	fmt.Println("Xtracer demo init...")
 
-    f, err := os.Create("cpu_night.prof")
+    f, err := os.Create("cpu2.prof")
     if err != nil {
         panic(err)
     }
@@ -85,29 +103,38 @@ func main() {
     if err := pprof.StartCPUProfile(f); err != nil {
         panic(err)
     }
+
     defer pprof.StopCPUProfile()
 
 
+	maxTex, texErr := tracecore.LoadTexture("maxim.png")
+
+	if texErr != nil {
+		panic(texErr)
+	}
 	
-	var frame *image.RGBA = image.NewRGBA(image.Rect(0, 0, 64, 64))
+	var frame *image.RGBA = image.NewRGBA(image.Rect(0, 0, frameWidth, frameHeight))
 	
 	scene := tracecore.NewTracedScene()
 	cam := tracecore.NewTracedCamera(
 		tracecore.Vec3{X: 0.0, Y: 0.0, Z: 0.0},
 		tracecore.Vec3{X: 1.0, Y: 0.0, Z: 0.0},
+		frameWidth,
+		frameHeight,
 	)
 	var angle float32 = -45
 
 	demo := XtracerDemo{scene: &scene, cam: &cam, a: &angle, frame: frame}
 	
+	
 
-
-	demo.scene.AddCuboid(tracecore.Cuboid{
-		Corner1: tracecore.Vec3{X: 2.0, Y: -7, Z: -7},
-		Corner2: tracecore.Vec3{X: 16.0, Y: 7, Z: 7},
-		IsLight: false,
-		MaterialColor: color.RGBA{255, 50, 50, 255},
-	})
+	demo.scene.AddCuboid(tracecore.NewCuboid(
+		tracecore.Vec3{X: 2.0, Y: -7, Z: -7},
+		tracecore.Vec3{X: 16.0, Y: 7, Z: 7},
+		false,
+		color.RGBA{255, 50, 50, 255},
+		maxTex,
+	))
 
 	
 
@@ -120,12 +147,12 @@ func main() {
 		"-y",
 		"-f", "rawvideo",
 		"-pix_fmt", "rgb24",
-		"-s", "64x64",
+		"-s", fmt.Sprintf("%vx%v", frameWidth, frameHeight),
 		"-r", "18",
 		"-i", "-",
 		"-c:v", "libx264",
 		"-pix_fmt", "yuv420p",
-		"-vf", "scale=512:512",
+		"-vf", fmt.Sprintf("scale=%v:%v", frameWidth, frameHeight),
 		"out.mp4",
 	)
 
@@ -142,19 +169,23 @@ func main() {
 
 	
 
-	for frame_step := 0; frame_step < 18; frame_step++ {
+	for frame_step := 0; frame_step < 64; frame_step++ {
 		
 		demo.Update(1.0/18.0)
 		demo.RenderFrame(frame_step)
 
+		fmt.Printf("Frame: %v\n", frame_step)
+
 
 		rgba_bytes := frame.Pix
-		frame_bytes := []byte{}
+		frame_bytes := make([]byte, frameWidth * frameHeight * 3)
 
 		c := 0
+		i := 0
 		for _, b := range rgba_bytes {
 			if c != 3 {
-				frame_bytes = append(frame_bytes, byte(b))
+				frame_bytes[i] = byte(b)
+				i++
 			}
 			c++
 			if c > 3 {
@@ -178,9 +209,9 @@ func main() {
 
 	
 
-	// f2, _ := os.Create("mem2.prof")
-	// pprof.WriteHeapProfile(f2)
-	// f2.Close()
+	f2, _ := os.Create("mem2.prof")
+	pprof.WriteHeapProfile(f2)
+	f2.Close()
 
 	
 

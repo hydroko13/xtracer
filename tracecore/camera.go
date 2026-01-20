@@ -7,7 +7,9 @@ import (
 type TracedCamera struct {
 	Pos Vec3
 	Facing Vec3
-	pixMap map[ScreenPoint]DoubleVec3
+	pixMap []DoubleVec3
+	pixWidth int
+	pixHeight int
 }
 
 
@@ -20,7 +22,7 @@ func (cam *TracedCamera) SetFacingVec(v Vec3) {
 	cam.Facing = v
 }
 
-func CalculatePixMap(origin Vec3, facing Vec3, pixWidth int, pixHeight int) map[ScreenPoint]DoubleVec3 {
+func CalculatePixMap(origin Vec3, facing Vec3, pixWidth int, pixHeight int) []DoubleVec3 {
 
 	var vectorToPlaneCenter Vec3 = facing.ScaleBy(0.5)
 	var worldUp Vec3 = Vec3{X: 0.0, Y: 1.0, Z: 0.0}
@@ -36,7 +38,7 @@ func CalculatePixMap(origin Vec3, facing Vec3, pixWidth int, pixHeight int) map[
 	// var halfWidth float32 = float32(pixWidth) / 2.0
 	// var halfHeight float32 = float32(pixHeight) / 2.0
 
-	var newPixMap map[ScreenPoint]DoubleVec3 = make(map[ScreenPoint]DoubleVec3, pixHeight * pixWidth)
+	var newPixMap []DoubleVec3 = make([]DoubleVec3, 0, pixHeight * pixWidth)
 
 	var planeTopleft Vec3 = planeCenter.Add(camRight.ScaleBy(1.0 * -0.5)).Add(camUp.ScaleBy(1.0 * 0.5))
 	
@@ -46,18 +48,18 @@ func CalculatePixMap(origin Vec3, facing Vec3, pixWidth int, pixHeight int) map[
 	var pixelRight Vec3 = camRight.Normalize().ScaleBy(1 / float32(pixWidth))
 	var pixelDown Vec3 = camDown.Normalize().ScaleBy(1 / float32(pixHeight))
 	
+	i := 0
 	for x := 0; x < pixWidth; x++ {
 		for y := 0; y < pixHeight; y++ {
-			var screenPoint ScreenPoint = ScreenPoint{x, y}
 
-			
 			var pixelPos Vec3 = planeTopleft.Add(pixelRight.ScaleBy(float32(x))).Add(pixelDown.ScaleBy(float32(y)))
 
 			var pixVec Vec3 = origin.Diff(pixelPos)
 
 			//var rayVec Vec3 = pixelPos.Diff(planeCenter.Add(pixVec.ScaleBy(1.25)))
 
-			newPixMap[screenPoint] = DoubleVec3{pixVec, pixVec.Normalize()}
+			newPixMap = append(newPixMap, DoubleVec3{pixVec, pixVec.Normalize()})
+			i++
 		}
 	}
 
@@ -67,17 +69,17 @@ func CalculatePixMap(origin Vec3, facing Vec3, pixWidth int, pixHeight int) map[
 }
 
 func (cam *TracedCamera) RecalculatePixMap() {
-	cam.pixMap = CalculatePixMap(cam.Pos, cam.Facing, 64, 64)
+	cam.pixMap = CalculatePixMap(cam.Pos, cam.Facing, cam.pixWidth, cam.pixHeight)
 }
 
-func NewTracedCamera(pos Vec3, facing Vec3) TracedCamera {
+func NewTracedCamera(pos Vec3, facing Vec3, w int, h int) TracedCamera {
 
 	facingNormed := facing.Normalize()
 
-	pixMap := CalculatePixMap(pos, facingNormed, 64, 64)
+	pixMap := CalculatePixMap(pos, facingNormed, w, h)
 
 
-	return TracedCamera{pos, facingNormed, pixMap}
+	return TracedCamera{pos, facingNormed, pixMap, w, h}
 }
 
 
